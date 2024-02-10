@@ -1,0 +1,6 @@
+ubuntu: sudo apt-get install wget
+arch: sudo pacman -S wget
+fedora: sudo yum install wget
+opensuse: sudo zypper install wget
+
+https://wiki.archiveteam.org/index.php/Wget_installation

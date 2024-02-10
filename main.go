@@ -3,10 +3,17 @@ package main
 import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"os"
+	"time"
 )
 
 func main() {
-	fmt.Println("binary error:", InitializeBinary())
+	err := InitializeBinary()
+	if err != nil {
+		panic(err)
+	} else {
+		fmt.Println("binary error:", err)
+	}
 
 	app := fiber.New(fiber.Config{
 		Prefork:           false,
@@ -18,6 +25,16 @@ func main() {
 		ReduceMemoryUsage: true,
 		Network:           "tcp4",
 		EnablePrintRoutes: true,
+	})
+
+	app.Get("/stop", func(c *fiber.Ctx) error {
+		fmt.Println("stopping server in 5s")
+		go func() {
+			time.Sleep(5 * time.Second)
+			fmt.Println("stopped")
+			os.Exit(0)
+		}()
+		return c.SendString("RobotDocs server stopping in 5 seconds")
 	})
 
 	app.Static("/", "./htmltest", fiber.Static{
@@ -32,7 +49,5 @@ func main() {
 		Next:           nil,
 	})
 
-	if err := app.Listen(":3000"); err != nil {
-		panic(err)
-	}
+	panic(app.Listen(":3000"))
 }

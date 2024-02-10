@@ -1,0 +1,12 @@
+https://superuser.com/questions/14403/how-can-i-download-an-entire-website
+
+https://stackoverflow.com/questions/273743/using-wget-to-recursively-fetch-a-directory-with-arbitrary-files-in-it
+
+python -m http.server
+
+https://github.com/sfreiberg/simplessh
+https://github.com/fyne-io/fyne
+
+wget -e robots=off --user-agent=Mozilla/5.0 -m -p -E -k docs.revrobotics.com/docs
+
+nohup command </dev/null >/dev/null 2>&1 &

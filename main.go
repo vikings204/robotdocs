@@ -8,7 +8,27 @@ import (
 )
 
 func main() {
-	err := InitializeBinary()
+	dir, err := os.UserConfigDir()
+	if err != nil {
+		panic(err)
+	}
+	err = os.Chdir(dir)
+	if err != nil {
+		panic(err)
+	}
+	err = os.Chdir("RobotDocs")
+	if err != nil {
+		err = os.Mkdir("RobotDocs", os.ModeDir)
+		err = os.Chdir("RobotDocs")
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	//panic(fixExternalRefs("htmltest\\baller\\og.html", "htmltest\\baller\\_external"))
+	fmt.Println(fixExternalRefs("htmltest\\baller\\og.html", "htmltest\\baller\\_external"))
+
+	err = InitializeBinary()
 	if err != nil {
 		panic(err)
 	} else {
@@ -37,7 +57,7 @@ func main() {
 		return c.SendString("RobotDocs server stopping in 5 seconds")
 	})
 
-	app.Static("/", "./htmltest", fiber.Static{
+	app.Static("/", "htmltest", fiber.Static{
 		Compress:       false,
 		ByteRange:      false,
 		Browse:         true,

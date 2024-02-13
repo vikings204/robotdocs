@@ -11,7 +11,5 @@ import (
 var binary []byte
 
 func InitializeBinary() error {
-	os.Chdir(os.UserConfigDir())
-	os.Mkdir("RobotDocs", os.ModeDir)
 	return os.WriteFile("wget.exe", binary, os.ModePerm)
 }

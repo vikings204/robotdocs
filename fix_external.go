@@ -13,14 +13,14 @@ import (
 	"strings"
 )
 
-func fixExternalRefs(htmlfn string, dir string) error {
-	bytes, err := os.ReadFile(htmlfn)
+func fixExternalRefs(htmlFn string, htmlDir string, dir string) error {
+	bytes, err := os.ReadFile(filepath.Join(htmlDir, htmlFn))
 	if err != nil {
 		return err
 	}
 	str := string(bytes)
 
-	regex := regexp.MustCompile("(https://(\\S+))\"")
+	regex := regexp.MustCompile("\"(?U)(https://(\\S+))\"")
 	matches := regex.FindAllStringSubmatch(str, -1)
 
 	for i := range matches {
@@ -43,7 +43,7 @@ func fixExternalRefs(htmlfn string, dir string) error {
 		if er != nil {
 			if errors.Is(er, os.ErrNotExist) {
 				resp, e := http.Get(url)
-				if e != nil {
+				if e != nil || resp.StatusCode >= 400 {
 					fmt.Println("failed to download", url)
 					continue
 				}
@@ -54,12 +54,18 @@ func fixExternalRefs(htmlfn string, dir string) error {
 					return errr
 				}
 				if len(extensions) > 0 {
-					fn += "." + extensions[0]
-					fp += "." + extensions[0]
+					if extensions[0] == ".htm" {
+						continue
+					}
+					fn += extensions[0]
+					fp += extensions[0]
 				} else {
 					fileExtensionRegex := regexp.MustCompile("(\\.[0-9a-z]+)(?:[?#%&]|$)")
 					ms := fileExtensionRegex.FindAllStringSubmatch(url, -1)
 					if len(ms) > 0 && len(ms[0]) > 1 {
+						if ms[0][1] == ".html" || ms[0][1] == ".htm" {
+							continue
+						}
 						fn += ms[0][1]
 						fp += ms[0][1]
 					}
@@ -70,7 +76,7 @@ func fixExternalRefs(htmlfn string, dir string) error {
 				_ = out.Close()
 				_ = resp.Body.Close()
 
-				fmt.Println(contentType, "downloaded", url)
+				fmt.Println("downloaded", contentType, url)
 				fmt.Println(fp)
 			} else {
 				return er
@@ -79,8 +85,16 @@ func fixExternalRefs(htmlfn string, dir string) error {
 			fmt.Println("already exists", url)
 		}
 
-		str = strings.Replace(str, url, "_external/"+fn, 1)
+		if strings.Contains(htmlFn, ".js") {
+			str = strings.Replace(str, url, "http://127.0.0.1:3000/baller/_external/"+fn, 1)
+		} else {
+			str = strings.Replace(str, url, "_external/"+fn, 1)
+		}
 	}
 
-	return os.WriteFile("new.html", []byte(str), os.ModePerm)
+	if strings.Contains(htmlFn, ".js") {
+		return os.WriteFile(filepath.Join(htmlDir, htmlFn), []byte(str), os.ModePerm)
+	}
+
+	return os.WriteFile(filepath.Join(htmlDir, "new_"+htmlFn), []byte(str), os.ModePerm)
 }

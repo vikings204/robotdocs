@@ -3,7 +3,11 @@ package main
 import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"io/fs"
 	"os"
+	"path/filepath"
+	"strings"
+	"sync"
 	"time"
 )
 
@@ -25,8 +29,37 @@ func main() {
 		}
 	}
 
-	//panic(fixExternalRefs("htmltest\\baller\\og.html", "htmltest\\baller\\_external"))
-	fmt.Println(fixExternalRefs("htmltest\\baller\\og.html", "htmltest\\baller\\_external"))
+	// tests DO NOT USE
+	//fmt.Println(fixExternalRefs("og.html", "htmltest\\baller", "htmltest\\baller\\_external"))
+	//fmt.Println(filepath.WalkDir("htmltest\\rev", func(path string, di fs.DirEntry, err error) error {
+	//	if strings.Contains(path, ".htm") {
+	//		fmt.Println(path)
+	//		return fixExternalRefs(path, "", "htmltest\\rev\\_external")
+	//	} else {
+	//		return nil
+	//	}
+	//}))
+
+	// multithreaded entire website
+	var paths []string
+	fmt.Println(filepath.WalkDir("htmltest\\rev", func(path string, di fs.DirEntry, err error) error {
+		if strings.Contains(path, ".htm") {
+			fmt.Println(path)
+			paths = append(paths, path)
+		}
+		return nil
+	}))
+	var wg sync.WaitGroup
+	wg.Add(len(paths))
+	fmt.Println("going")
+	for pn := range paths {
+		go func(p string) {
+			defer wg.Done()
+			fmt.Println(fixExternalRefs(p, "", "htmltest\\rev\\_external"))
+		}(paths[pn])
+	}
+
+	//wg.Wait()
 
 	err = InitializeBinary()
 	if err != nil {
@@ -62,7 +95,7 @@ func main() {
 		ByteRange:      false,
 		Browse:         true,
 		Download:       false,
-		Index:          "",
+		Index:          "NO_INDEX_PLEASE",
 		CacheDuration:  0,
 		MaxAge:         0,
 		ModifyResponse: nil,
